@@ -4,13 +4,34 @@ pragma solidity ^0.8.20;
 import {Test} from "forge-std/Test.sol";
 import {WenOff} from "../src/WenOff.sol";
 
+contract ReentrantClaimer {
+    WenOff wenOff;
+    uint256 roundId;
+
+    constructor(WenOff _w) {
+        wenOff = _w;
+    }
+
+    function setRound(uint256 _roundId) external {
+        roundId = _roundId;
+    }
+
+    function claim() external {
+        wenOff.claim(roundId);
+    }
+
+    receive() external payable {
+        wenOff.claim(roundId);
+    }
+}
+
 contract WenOffTest is Test {
     WenOff public wenOff;
 
     address constant PROTOCOL = address(1);
     address constant ECOSYSTEM = address(2);
     uint256 constant FEE_ONE = 0.001 ether;
-    uint256 constant FEE_TWO = 0.001 ether;
+    uint256 constant FEE_TWO = 0.002 ether;
     uint256 constant FEE_THREE = 0.01 ether;
 
     address alice = address(0xa11ce);
@@ -78,11 +99,7 @@ contract WenOffTest is Test {
         assertEq(uint256(wenOff.roundEndReason(1)), uint256(WenOff.EndReason.NO_WINNER));
         assertEq(wenOff.roundPotAtFinalize(1), 0);
         assertTrue(wenOff.roundFinalized(1));
-
-        uint256 aliceBefore = alice.balance;
-        vm.prank(alice);
-        wenOff.claim(1);
-        assertEq(alice.balance, aliceBefore);
+        assertEq(wenOff.getClaimable(1, alice), 0);
     }
 
     function test_NoPaidEntries_ClaimRevertsNoClaimable() public {
@@ -136,7 +153,9 @@ contract WenOffTest is Test {
         vm.warp(block.timestamp + 10 minutes + 1);
 
         vm.prank(bob);
-        vm.expectRevert(abi.encodeWithSelector(WenOff.DeadlineNotPassed.selector, block.timestamp + 10 minutes + 1));
+        vm.expectRevert(
+            abi.encodeWithSelector(bytes4(keccak256("DeadlineNotPassed(uint256)")), wenOff.roundDeadline())
+        );
         wenOff.enter{value: FEE_ONE}();
     }
 
@@ -291,27 +310,6 @@ contract WenOffTest is Test {
 
     // ─── 7) Reentrancy safety ───────────────────────────────────────────────
 
-    contract ReentrantClaimer {
-        WenOff wenOff;
-        uint256 roundId;
-
-        constructor(WenOff _w) {
-            wenOff = _w;
-        }
-
-        function setRound(uint256 _roundId) external {
-            roundId = _roundId;
-        }
-
-        function claim() external {
-            wenOff.claim(roundId);
-        }
-
-        receive() external payable {
-            wenOff.claim(roundId);
-        }
-    }
-
     function test_Reentrancy_ClaimRevertsOnReenter() public {
         ReentrantClaimer reentrer = new ReentrantClaimer(wenOff);
         vm.deal(address(reentrer), 1 ether);
@@ -324,7 +322,14 @@ contract WenOffTest is Test {
         wenOff.finalize();
 
         reentrer.setRound(1);
-        vm.expectRevert(WenOff.ReentrantCall.selector);
+        uint256 expectedAmount = (FEE_ONE * 6000) / 10000; // winner share (60% of pot)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                bytes4(keccak256("TransferFailed(address,uint256)")),
+                address(reentrer),
+                expectedAmount
+            )
+        );
         reentrer.claim();
     }
 

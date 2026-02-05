@@ -4,6 +4,26 @@ Single end-to-end checklist. Run from **whenoff-contracts** repo root unless sta
 
 ---
 
+## Setup (run once)
+
+Create a local `.env` from the example (gitignored), then install deps and build:
+
+```bash
+cp .env.example .env
+# Edit .env and fill in: PRIVATE_KEY (hex 0x...), BASE_SEPOLIA_RPC_URL, PROTOCOL_BENEFICIARY, ECOSYSTEM_BENEFICIARY
+
+forge install foundry-rs/forge-std
+export $(grep -v '^#' .env | xargs)
+forge build
+forge test
+forge script script/Deploy.s.sol \
+  --rpc-url $BASE_SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+---
+
 ## A) CONTRACTS REPO (whenoff-contracts)
 
 ### 1) Files/folders you must have before deploying
@@ -21,7 +41,7 @@ No `broadcast/` or `out/` needed before first deploy; they are created by Forge.
 
 ### 2) Environment variables
 
-**Where:** Create a file `.env` in the **repo root** (`whenoff-contracts/.env`). Do **not** commit it (`.env` is in `.gitignore`).
+**Where:** Copy `.env.example` to `.env` in the **repo root** (`whenoff-contracts/.env`), then fill in real values. Do **not** commit `.env` (it is in `.gitignore`).
 
 **Required:**
 
@@ -61,7 +81,7 @@ forge script script/Deploy.s.sol \
   --broadcast
 ```
 
-If `forge build` fails with missing `forge-std`, run: `forge install foundry-rs/forge-std --no-commit`
+If `forge build` fails with missing `forge-std`, run: `forge install foundry-rs/forge-std`
 
 ---
 

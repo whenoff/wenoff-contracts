@@ -166,6 +166,7 @@ contract WenOff {
         if (roundState != RoundState.ACTIVE) revert WrongState(roundState);
         if (block.timestamp >= roundDeadline) revert DeadlineNotPassed(roundDeadline);
 
+        // Fee is fixed by roundLamp (set at lightOn) and cannot change mid-round.
         uint256 fee = entryFeeWei[roundLamp];
         if (value != fee) revert InvalidEntryFee(value, fee);
 
