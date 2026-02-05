@@ -8,7 +8,13 @@ contract WenOffTest is Test {
     WenOff public wenOff;
 
     function setUp() public {
-        wenOff = new WenOff();
+        wenOff = new WenOff(
+            0.001 ether,  // lamp ONE
+            0.001 ether,  // lamp TWO
+            0.01 ether,   // lamp THREE
+            address(1),
+            address(2)
+        );
     }
 
     // TODO: add tests
