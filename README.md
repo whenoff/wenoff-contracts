@@ -2,7 +2,8 @@
 
 Onchain waiting game smart contracts for **Base** (EVM). Single contract, no backend, no database—UI reads all state from chain.
 
-→ **[SPEC.md](./SPEC.md)** — Contract API, storage, and events (implementable spec).
+→ **[SPEC.md](./SPEC.md)** — Contract API, storage, and events (implementable spec).  
+→ **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** — End-to-end deploy + frontend wiring (Base Sepolia).
 
 ---
 
