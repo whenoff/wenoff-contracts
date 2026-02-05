@@ -144,6 +144,59 @@ Set `PRIVATE_KEY` and `BASESCAN_API_KEY` (or equivalent) for deployment and veri
 
 ---
 
+## Deployment
+
+Deploy to **Base Sepolia** (testnet) using Foundry. No secrets are committed; all sensitive values come from the environment.
+
+### Required environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `PRIVATE_KEY` | Deployer wallet private key in **hex format** (e.g. `0x...`). Read in script with `vm.envBytes32("PRIVATE_KEY")`; deployer EOA derived via `vm.addr(privateKey)`. |
+| `BASE_SEPOLIA_RPC_URL` | Base Sepolia RPC endpoint (e.g. from Alchemy, Infura, or public). |
+| `PROTOCOL_BENEFICIARY` | Address that receives the 10% protocol share. |
+| `ECOSYSTEM_BENEFICIARY` | Address that receives the 5% ecosystem share. |
+
+Optional (constructor defaults shown):
+
+| Variable | Default |
+|----------|---------|
+| `FEE_ONE_WEI` | `0.001 ether` |
+| `FEE_TWO_WEI` | `0.001 ether` |
+| `FEE_THREE_WEI` | `0.01 ether` |
+
+Use a `.env` file for local runs and ensure `.env` is gitignored (it is in this repo). Export `PRIVATE_KEY` in hex form (e.g. `0x1234...`).
+
+### Deploy to Base Sepolia
+
+```bash
+# Load env (example; do not commit .env)
+export $(grep -v '^#' .env | xargs)
+
+forge script script/Deploy.s.sol \
+  --rpc-url $BASE_SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+The script reads `PRIVATE_KEY` from the environment (as hex), derives the deployer EOA with `vm.addr(privateKey)`, and logs deployer, `chainId`, and deployed contract address.
+
+### Deploy to Base mainnet
+
+Use the same script and switch RPC and (if desired) env:
+
+```bash
+export BASE_MAINNET_RPC_URL=https://mainnet.base.org  # or your RPC
+forge script script/Deploy.s.sol \
+  --rpc-url $BASE_MAINNET_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+
+Verification is not run from the script. See commented instructions at the bottom of `script/Deploy.s.sol` for verifying the contract on BaseScan.
+
+---
+
 ## License & Transparency
 
 Public repo. Transparency-first design. One contract, no upgradeable proxy in v1.
