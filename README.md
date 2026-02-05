@@ -120,15 +120,16 @@ Changing the lamp affects **only the next round**, not the currently active roun
 curl -L https://foundry.paradigm.xyz | bash
 foundryup
 
-# Clone & build
+# Install dependencies (e.g. forge-std)
 forge install
-forge build
 ```
 
-### Test
+### Local Commands
 
 ```bash
+forge build
 forge test
+forge script script/Deploy.s.sol --rpc-url <BASE_RPC> --broadcast
 ```
 
 ### Deploy (Base)
